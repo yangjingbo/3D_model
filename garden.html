@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>智慧园区</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <link type="text/css" rel="stylesheet" href="main.css">
+    <script type="text/javascript" src="script/jquery-3.2.1.js"></script>
+</head>
+
+<body  style="padding:0px; margin: 0px;  overflow: hidden">
+
+<!--
+<div id="halfPage" >
+    <img style="height: 100px; width: 100%" src="upHalf.png" />
+</div>
+-->
+<script type="module">
+
+    import * as THREE from './build/three.module.js';
+
+    import Stats from './examples/jsm/libs/stats.module.js';
+
+    import { OrbitControls } from './examples/jsm/controls/OrbitControls.js';
+    import { FBXLoader } from './examples/jsm/loaders/FBXLoader.js';
+
+    import { DragControls }  from './examples/jsm/controls/DragControls.js';
+    import {TransformControls}  from './examples/jsm/controls/TransformControls.js';
+
+
+    var container, controls, dragControls;
+    var camera, scene, light, cameraOffset;
+    var renderer = new THREE.WebGLRenderer( { antialias: true } );
+    var garden = [], raycaster, mouse = new THREE.Vector2();
+
+    var lineText = new THREE.Object3D();
+    var text = new THREE.Mesh ;
+    var text2 = new THREE.Mesh ;
+    var text3 = new THREE.Mesh ;
+    var text4 = new THREE.Mesh ;
+    var text5 = new THREE.Mesh ;
+    var text6 = new THREE.Mesh ;
+    var text7 = new THREE.Mesh;
+
+    var message = "日光温室\n占地140亩，共包括7类\n ";
+
+    var message2 = "智慧温室\n智慧温室为园区核心展示区\n温室总面积3万平方米";
+
+    //大棚4 和大棚3 由于改动，属于同一类大棚，只显示大棚3
+    var message3 = "大跨度单体拱棚 占地372亩，规划建设66座 主要采用限根栽培技术";
+
+    var message4 = "大棚4 \n 真好啊，这是我见过的最好的大棚\n 年年生产很多果实和输出\n" +
+        "满足全国各地人民的需求\n快来点个赞吧！！！";
+
+    var message5 = "中东连栋阳光板温室,总面积4240㎡\n采用潮汐式栽培模式 ";
+
+    var message6 = "北美连栋膜温室,总面积4240㎡\n采用生态无土栽培模式 ";
+    //text.type = THREE.Mesh(null, null);
+
+    var message7 = "指挥中心";
+
+
+
+    var color =  	0x000000;//0x228B22;//0xa020f0;//显示大棚提示信息的颜色
+    var purpleColor = 0xA020F0;//大棚3提示颜色
+    var matLite = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: false,
+        //opacity: 0.4,
+        opacity: 0.8,
+        side: THREE.DoubleSide
+    });
+    var matLite3 = new THREE.MeshBasicMaterial({
+        color: color,
+        transparent: false,
+        //opacity: 0.4,
+        opacity: 0.8,
+        side: THREE.DoubleSide
+    });
+
+    var mouseX = 0, mouseY = 0;
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
+
+    var cubeGeometry = new THREE.BoxGeometry(145, 0.1, 145);
+    var cubeMatarial = new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true, opacity: 0});
+    var cube1 = new THREE.Mesh(cubeGeometry, cubeMatarial);
+    cube1.material.transparent = true;
+
+    var cubeGeometry_1 = new THREE.BoxGeometry(145, 0.1, 145);
+    var cubeMatarial_1 = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
+    var cube1_1 = new THREE.Mesh(cubeGeometry_1, cubeMatarial_1);
+    cube1_1.material.transparent = true;
+
+
+
+
+
+    //在模型中，每种大棚没有明显得GameObject做标记，因此在每种大棚上面添加一个长方形，鼠标接触到长方形，显示出对应大棚的提示信息
+    //大棚在 长方形下面，长方形在文字下面，cube2对应text2，cube3对应text3，依次类推
+    var cubeGeometry2 = new THREE.BoxGeometry(90, 0.1, 80);
+    var cubeMatarial2 = new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true, opacity: 0});
+    var cube2 = new THREE.Mesh(cubeGeometry2, cubeMatarial2);
+    cube2.material.transparent = true;
+
+    var cubeGeometry2_1 = new THREE.BoxGeometry(90, 0.1, 80);
+    var cubeMatarial2_1 = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
+    var cube2_1 = new THREE.Mesh(cubeGeometry2_1, cubeMatarial2_1);
+    cube2_1.material.transparent = true;
+
+
+    var cubeGeometry3 = new THREE.BoxGeometry(145, 0.1, 145);
+    var cubeMatarial3 = new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true, opacity: 0});
+    var cube3 = new THREE.Mesh(cubeGeometry3, cubeMatarial3);
+    cube3.material.transparent = true;
+
+    var cubeGeometry3_1 = new THREE.BoxGeometry(250, 0.1, 50);
+    var cubeMatarial3_1 = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
+    var cube3_1 = new THREE.Mesh(cubeGeometry3_1, cubeMatarial3_1);
+    cube3_1.material.transparent = true;
+
+    //cube3_1.rotateX(-1 * Math.PI * 0.2);
+
+    var cubeGeometry4 = new THREE.BoxGeometry(145, 0.1, 145);
+    var cubeMatarial4 = new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true, opacity: 0});
+    var cube4 = new THREE.Mesh(cubeGeometry4, cubeMatarial4);
+    cube4.material.transparent = true;
+
+    var cubeGeometry5 = new THREE.BoxGeometry(45, 0.1, 23);
+    var cubeMatarial5 = new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true, opacity: 0});
+    var cube5 = new THREE.Mesh(cubeGeometry5, cubeMatarial5);
+    cube5.material.transparent = true;
+
+
+    //来自原点的方向。必须是单位向量
+    var dir = new THREE.Vector3(-100, 50, 0);
+    // 规格化方向向量(转换为长度为1的向量)
+    dir.normalize();
+    // 箭头开始的点
+    var origin = new THREE.Vector3(180, 50, 0);
+    // 箭头的长度。默认值为1
+    var length = 30;
+    // 用于定义颜色的十六进制值。默认值为0xffff00
+    var hex = 0xffff00;
+    // 箭头的长度。默认值为0.2 *length
+    var headLength = 15;
+    // 箭头宽度的长度。默认值为0.2 * headLength。
+    var headWidth = 15;
+    var arrowHelper5 = new THREE.ArrowHelper(dir, origin, length, hex,headLength,headWidth);
+    var arrowHelper6 = new THREE.ArrowHelper(dir, origin, length, hex,headLength,headWidth);
+
+
+    var cubeGeometry5_1 = new THREE.BoxGeometry(100, 0.1, 50);
+    var cubeMatarial5_1 = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
+    var cube5_1 = new THREE.Mesh(cubeGeometry5_1, cubeMatarial5_1);
+    cube5_1.material.transparent = true;
+
+
+
+
+
+    var cubeGeometry6 = new THREE.BoxGeometry(45, 0.1, 23);
+    var cubeMatarial6 = new THREE.MeshLambertMaterial({color: 0xff0000, transparent: true, opacity: 0});
+    var cube6 = new THREE.Mesh(cubeGeometry6, cubeMatarial6);
+    cube6.material.transparent = true;
+
+    var cubeGeometry6_1 = new THREE.BoxGeometry(100, 0.1, 60);
+    var cubeMatarial6_1 = new THREE.MeshLambertMaterial({color: 0xffffff, transparent: true, opacity: 0.8});
+    var cube6_1 = new THREE.Mesh(cubeGeometry6_1, cubeMatarial6_1);
+    cube6_1.material.transparent = true;
+
+
+
+
+
+
+    var enable = false;
+
+    var mouseStartTime = new Date().getTime();
+    var duration;
+
+    var clock = new THREE.Clock();
+
+    var mixer;
+
+    var snowPoints,  rainPoints ;//雪花, 雨滴粒子
+    var RAIN_WEATHER = '雨';
+    var SNOW_WEATHER = '雪';
+    var NORMAL_WEATHER = "晴"//3D效果图只有 雨，雪 ，晴3种情况
+    var weatherUrl = "http://localhost:8002/getCityWeather";//天气接口
+    var YANG_LING_CITY_CODE = 610403;
+
+    var nowWeather = NORMAL_WEATHER; //  刚开始，天气为默认值 晴
+    var hasCreatedRain = false;
+    var hasCreatedSnow = false;
+
+    //getWeatherInfo();
+
+
+    init();
+    animate();
+
+
+    function init() {
+
+        container = document.createElement( 'div' );
+        document.body.appendChild( container );
+
+        //camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+        //camera.position.set( 300, 200, 200 );
+
+        //camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+        camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 2000 );
+        //camera.position.set( 100, 200, 300 );
+        //camera.position.set( 150, 200, 0 );
+        camera.position.set( 20, 300, -300 );
+        camera.lookAt(0, 0, 0);
+
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color( 0xa0a0a0 );
+        scene.fog = new THREE.Fog( 0xa0a0a0, 200, 1000 );
+
+        light = new THREE.HemisphereLight( 0xffffff, 0x444444 );
+        light.position.set( 0, 300, 0 );
+        scene.add( light );
+
+        light = new THREE.DirectionalLight( 0xffffff );
+        light.position.set( 0, 200, 100 );
+        light.castShadow = true;
+        light.shadow.camera.top = 180;
+        light.shadow.camera.bottom = - 100;
+        light.shadow.camera.left = - 120;
+        light.shadow.camera.right = 120;
+        scene.add( light );
+
+        cube1.position.set(112, 201, -110);
+        scene.add(cube1);
+        cube1_1.position.set(112, 201, -110);
+        scene.add(cube1_1);
+
+
+
+        cube3.position.set(110, 201, 55);
+        scene.add(cube3);
+
+        cube3_1.position.set(30, 212, 50);
+        scene.add(cube3_1);
+
+        cube4.position.set(-56, 201, 51);
+        scene.add(cube4);
+
+
+        cube2.position.set(-30, 201, -100);
+        scene.add(cube2);
+        cube2_1.position.set(-30, 201, -100);
+        scene.add(cube2_1);
+
+        cube5.position.set(-9, 202, 15);
+        scene.add(cube5);
+        cube5_1.position.set(-80, 212, 20);
+        scene.add(cube5_1);
+        arrowHelper5.position.set(0, 192, 15);
+        arrowHelper5.rotateY( Math.PI * 0.5);
+        scene.add(arrowHelper5);
+
+        arrowHelper6.position.set(0, 192, -20);
+        arrowHelper6.rotateY( Math.PI * 0.5);
+        scene.add(arrowHelper6);
+
+
+        cube6.position.set(-9, 212, -6);
+        scene.add(cube6);
+        cube6_1.position.set(-80, 202, -13);
+        scene.add(cube6_1);
+
+
+
+
+        //scene.add( new CameraHelper( light.shadow.camera ) );
+
+        // ground
+        var mesh = new THREE.Mesh( new THREE.PlaneBufferGeometry( 2000, 2000 ), new THREE.MeshPhongMaterial( { color: 0x999999, depthWrite: false } ) );
+        mesh.rotation.x = - Math.PI / 2;
+        mesh.receiveShadow = true;
+        scene.add( mesh );
+
+        var grid = new THREE.GridHelper( 2000, 20, 0x000000, 0x000000 );
+        grid.material.opacity = 0.2;
+        grid.material.transparent = true;
+        //scene.add( grid );
+
+
+
+        // model
+        var loader = new FBXLoader();
+        loader.load( './examples/models/fbx/niaokantu.fbx', function ( object ) {
+
+            enable = true;
+            //mixer = new THREE.AnimationMixer( object );
+
+            //var action = mixer.clipAction( object.animations[ 0 ] );
+            //action.play();
+
+            object.traverse( function ( child ) {
+
+                //console.log(child.position);
+                if ( child.isMesh ) {
+
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+
+                    //garden.push(child);
+                }
+
+            } );
+            object.scale.set(0.5, 0.5, 0.5);
+            object.position.set(20, 200, -30);
+            //garden = object.to
+            scene.add( object );
+
+        } , undefined, function (error) {
+            console.error("load model happens error--------------： "+ error);
+        });
+
+        //scene.position.set(50, 150, 0);
+
+        //renderer = new THREE.WebGLRenderer( { antialias: true } );
+        renderer.setPixelRatio( window.devicePixelRatio );
+       // renderer.setSize( window.innerWidth , window.innerHeight );
+        renderer.setSize( window.innerWidth , window.innerHeight  );
+        console.log('inner width: '+window.innerWidth + "     inner height:"+window.innerHeight);
+        console.log("pixel   width: "+renderer.pixelWidth);
+        //renderer.set
+        renderer.shadowMap.enabled = true;
+        container.appendChild( renderer.domElement );
+
+        controls = new OrbitControls( camera, renderer.domElement );
+        controls.target.set( 0, 100, 0 );
+        controls.maxPolarAngle = Math.PI * 0.35;
+        //controls.minDistance = 100;
+        controls.maxDistance = 500;
+        controls.rotateSpeed = 0.3;
+        controls.update();
+        //controls.target.set( 0, 100, 0 );
+        controls.update();
+
+        console.log("drag control function");
+
+        //初始化，创建雨和雪粒子
+        createRain();
+        createSonw();
+
+
+
+
+        /**
+        var skyBoxGeometry = new THREE.BoxGeometry( 5000, 5000, 5000 );
+
+        var texture11 = new THREE.TextureLoader().load("11.jpg");
+
+        var skyBoxMaterial = new THREE.MeshBasicMaterial( { map: texture11, side: THREE.DoubleSide } );
+
+        var skyBox = new THREE.Mesh( skyBoxGeometry, skyBoxMaterial );
+
+        skyBox.position.set(30, 320, -160);
+
+        scene.add(skyBox);**/
+
+
+
+
+
+
+
+
+
+
+
+
+
+        var textloader = new THREE.FontLoader();
+        //KaiTi_Regular
+        //helvetiker_regular
+        textloader.load( './examples/fonts/KaiTi_Regular.typeface.json', function ( font ) {
+
+            var shapes = font.generateShapes(message, 5);
+            var geometry = new THREE.ShapeBufferGeometry(shapes);
+            geometry.computeBoundingBox();
+
+            text = new THREE.Mesh(geometry, matLite);
+            text.position.set(120, 213, -90);
+            text.rotateY(Math.PI );
+            text.rotateX(-1 * Math.PI * 0.3);
+            scene.add(text);
+
+            var shapes2 = font.generateShapes(message2, 5);
+            var geometry2 = new THREE.ShapeBufferGeometry(shapes2);
+            geometry2.computeBoundingBox();
+            text2 = new THREE.Mesh(geometry2, matLite);
+            text2.position.set(13, 213, -90);
+            text2.rotateY(Math.PI );
+            text2.rotateX(-1 * Math.PI * 0.3);
+            scene.add(text2);
+
+
+            var shapes3 = font.generateShapes(message3, 5);
+            var geometry3 = new THREE.ShapeBufferGeometry(shapes3);
+            geometry3.computeBoundingBox();
+            text3 = new THREE.Mesh(geometry3, matLite3);
+            text3.position.set(120, 213, 40);
+            text3.rotateY(Math.PI );
+            text3.rotateX(-1 * Math.PI * 0.3);
+            scene.add(text3);
+
+            /**var shapes4 = font.generateShapes(message4, 2);
+            var geometry4 = new THREE.ShapeBufferGeometry(shapes4);
+            geometry4.computeBoundingBox();
+            text4 = new THREE.Mesh(geometry4, matLite);
+            text4.position.set(30, 320, -80);
+            text4.rotateY(Math.PI );
+            text4.rotateX(-1 * Math.PI * 0.3);
+            scene.add(text4);**/
+
+
+            var shapes5 = font.generateShapes(message5, 5);
+            var geometry5 = new THREE.ShapeBufferGeometry(shapes5);
+            geometry5.computeBoundingBox();
+            text5 = new THREE.Mesh(geometry5, matLite3);
+            text5.position.set(-30, 218, 20);
+            text5.rotateY(Math.PI );
+            text5.rotateX(-1 * Math.PI * 0.3);
+            scene.add(text5);
+
+
+            var shapes6 = font.generateShapes(message6, 5);
+            var geometry6 = new THREE.ShapeBufferGeometry(shapes6);
+            geometry6.computeBoundingBox();
+            text6 = new THREE.Mesh(geometry6, matLite);
+            text6.position.set(-30, 213, -16);
+            text6.rotateY(Math.PI );
+            text6.rotateX(-1 * Math.PI * 0.3);
+            scene.add(text6);
+
+
+            var shapes7 = font.generateShapes(message7, 3);
+            var geometry7 = new THREE.ShapeBufferGeometry(shapes7);
+            geometry7.computeBoundingBox();
+            text7 = new THREE.Mesh(geometry7, matLite);
+            text7.position.set(11, 213, -183);
+            text7.rotateY(Math.PI );
+            text7.rotateX(-1 * Math.PI * 0.5);
+            scene.add(text7);
+
+
+
+            text.visible = false;
+            text2.visible = false;
+            text3.visible = false;
+            //text4.visible = false;
+            text5.visible = false;
+            text6.visible = false;
+
+            cube1_1.visible = false;
+            cube2_1.visible = false;
+            cube3_1.visible = false;
+            cube5_1.visible = false;
+            arrowHelper5.visible = false;
+            cube6_1.visible = false;
+            arrowHelper6.visible = false;
+
+
+        });
+        //text.visible = false;
+        //lineText.visible = false;
+        text.visible = false;
+        garden=[];
+        raycaster = new THREE.Raycaster();
+
+        //text.visible = false;
+
+
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+
+        window.addEventListener( 'resize', onWindowResize, false );
+        // stats
+        //stats = new Stats();
+        //container.appendChild( stats.dom );
+
+
+
+    }
+
+
+    function onDocumentMouseMove( event ) {
+        if (!enable) {
+            return;
+        }
+
+        var now =  new Date().getTime() ;
+        duration = (now - mouseStartTime );
+
+        //console.log("duration:   "+ duration);
+        if (duration < 50){
+            return;
+        }
+
+        mouseStartTime = now;
+
+        event.preventDefault();
+
+
+        mouse.x = (event.clientX / renderer.domElement.clientWidth) * 2 - 1;
+        mouse.y = - (event.clientY / renderer.domElement.clientHeight) * 2 + 1;
+
+        let p = new THREE.Vector3(mouse.x, mouse.y, -1).unproject(camera);
+        //console.log("text position x: "+text.position.x +"  text.position.y: "+text.position.y + "  text.position.z: "+text.position.z);
+       //console.log("mouse position x: "+mouse.x + "  y:  "+mouse.y);
+        //console.log("x:  "+ p.x +"  y:  "+p.y+"   z: "+p.z );
+
+
+         raycaster = new THREE.Raycaster(camera.position, p.sub(camera.position).normalize());
+
+         //射线和模型求交，选中一系列直线
+         var objects2 = [];
+         objects2.push(cube1);
+         objects2.push(cube2);
+         objects2.push(cube3);
+         objects2.push(cube4);
+         objects2.push(cube5);
+         objects2.push(cube6);
+         var intersects = raycaster.intersectObjects(objects2);
+         //console.log('imtersrcts=' + intersects.length)
+console.log('length--------------------:  '+intersects.length);
+         //由于cube与text的对应关系，通过判断鼠标在哪个cube上，可以设置对应的text的显示，时间关系，此段代码，后续优化
+         if (intersects.length > 0) {
+					//选中第一个射线相交的物体
+					//SELECTED = intersects[0].object;
+					var intersected = intersects[0].object;
+					if (intersected == cube1){
+					    //console.log("选中 1");
+					     text.visible = true;
+                        text2.visible = false;
+                        text3.visible = false;
+                        text5.visible = false;
+                        text6.visible = false;
+                        cube1_1.visible = true;
+                        cube2_1.visible = false;
+                        cube3_1.visible = false;
+                        cube5_1.visible = false;
+                        arrowHelper5.visible = false;
+                        cube6_1.visible = false;
+                        arrowHelper6.visible = false;
+                    } else if (intersected == cube2){
+					    //console.log("选中 2 ");
+                        text.visible = false;
+                        text2.visible = true;
+                        text3.visible = false;
+                        text5.visible = false;
+                        text6.visible = false;
+                        cube1_1.visible = false;
+                        cube2_1.visible = true;
+                        cube3_1.visible = false;
+                        cube5_1.visible = false;
+                        arrowHelper5.visible = false;
+                        cube6_1.visible = false;
+                        arrowHelper6.visible = false;
+                    } else if(intersected == cube3 || intersected == cube4){
+                        //console.log("选中 3 ");
+                        text.visible = false;
+                        text2.visible = false;
+                        text3.visible = true;
+                        text5.visible = false;
+                        text6.visible = false;
+                        cube1_1.visible = false;
+                        cube2_1.visible = false;
+                        cube3_1.visible = true;
+                        cube5_1.visible = false;
+                        arrowHelper5.visible = false;
+                        cube6_1.visible = false;
+                        arrowHelper6.visible = false;
+                    } else if(intersected == cube5){
+                        //console.log("选中 4 ");
+                        text.visible = false;
+                        text2.visible = false;
+                        text3.visible = false;
+                        text5.visible = true;
+                        text6.visible = false;
+                        cube1_1.visible = false;
+                        cube2_1.visible = false;
+                        cube3_1.visible = false;
+                        cube5_1.visible = true;
+                        arrowHelper5.visible = true;
+                        cube6_1.visible = false;
+                        arrowHelper6.visible = false;
+                    }else if(intersected == cube6){
+                        //console.log("选中 4 ");
+                        text.visible = false;
+                        text2.visible = false;
+                        text3.visible = false;
+                        text5.visible = false;
+                        text6.visible = true;
+                        cube1_1.visible = false;
+                        cube2_1.visible = false;
+                        cube3_1.visible = false;
+                        cube5_1.visible = false;
+                        arrowHelper5.visible = false;
+                        cube6_1.visible = true;
+                        arrowHelper6.visible = true;
+                    }
+
+					//console.log(intersects[0].object)
+				} else {
+                    text.visible = false;
+                    text2.visible = false;
+                    text3.visible = false;
+                    text4.visible = false;
+                    text5.visible = false;
+                    text6.visible = false;
+                     cube1_1.visible = false;
+                     cube2_1.visible = false;
+                     cube3_1.visible = false;
+                     cube5_1.visible = false;
+                     arrowHelper5.visible = false;
+                     cube6_1.visible = false;
+                     arrowHelper6.visible = false;
+                }
+
+        /**
+        var distance = Math.sqrt((p.x - text.position.x)*(p.x - text.position.x) + (p.y - text.position.y)*(p.y - text.position.y) + (p.z - text.position.z)*(p.z - text.position.z));
+        var distance2 = Math.sqrt((p.x - text2.position.x)*(p.x - text2.position.x) + (p.y - text2.position.y)*(p.y - text2.position.y) + (p.z - text2.position.z)*(p.z - text2.position.z));
+        var distance3 = Math.sqrt((p.x - text3.position.x)*(p.x - text3.position.x) + (p.y - text3.position.y)*(p.y - text3.position.y) + (p.z - text3.position.z)*(p.z - text3.position.z));
+        var distance4 = Math.sqrt((p.x - text4.position.x)*(p.x - text4.position.x) + (p.y - text4.position.y)*(p.y - text4.position.y) + (p.z - text4.position.z)*(p.z - text4.position.z));
+        console.log("distance:  "+distance);
+        console.log("distance:  "+distance2);
+        console.log("distance:  "+distance3);
+        console.log("distance:  "+distance4);**/
+
+    }
+
+
+    function onWindowResize() {
+
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize( window.innerWidth, window.innerHeight  );
+        //renderer.setSize(window.innerWidth , window.innerHeight - 400);
+    }
+
+    //
+
+    function animate() {
+
+        requestAnimationFrame( animate );
+
+        var delta = clock.getDelta();
+
+        if ( mixer ) mixer.update( delta );
+
+        renderer.render( scene, camera );
+
+        render();
+
+        if(nowWeather == NORMAL_WEATHER){
+            rainPoints.visible = false;
+            snowPoints.visible = false;
+        } else if(nowWeather == SNOW_WEATHER){
+            rainPoints.visible = false;
+            snowPoints.visible = true;
+            snowUpdate();
+        } else if(nowWeather == RAIN_WEATHER){
+            rainPoints.visible = true;
+            snowPoints.visible = false;
+            rainUpdate();
+
+        }
+        //snowUpdate();//雪花更新
+        //rainUpdate();//雨滴更新
+    }
+
+    function changeWeather(value){
+       let weather = value.weather;
+       console.log("weather-------------: "+weather);
+        if(weather.indexOf(SNOW_WEATHER) != -1) {
+            nowWeather = SNOW_WEATHER;
+        } else if(weather.indexOf(RAIN_WEATHER) != -1){
+            nowWeather = RAIN_WEATHER;
+        }
+    }
+
+    function getWeatherInfo() {
+        $.ajax({
+            type:"get",//提交方式
+            data:{city: YANG_LING_CITY_CODE},//查询的参数
+            url:weatherUrl,//提交的路径
+            dataType:"text",//返回的类型  是Text文本
+            success:function(result){
+                if(result==0) {
+                    console.log("get weather  happens error    ");
+                }else{
+                    console.log("get weather  info ok: ");
+                    let weatherValue = JSON.parse(result);
+                    console.log(weatherValue);
+                    changeWeather(weatherValue.lives[0]);
+                }
+            }
+        })
+    }
+
+
+    setInterval(getWeatherInfo, 60000 * 10 );// 10 分钟获取一次天气情况
+
+    function createSonw() {
+        //实现雪花效果
+        var sonwTexture = new THREE.TextureLoader().load('snowflake2.png');//雪花图片
+        var pointsMaterial = new THREE.PointsMaterial({
+
+            size:7,
+            transparent:true,
+            opacity:0.7,
+            map:sonwTexture,
+            blending:THREE.AdditiveBlending,
+            sizeAttenuation:true,
+            depthTest: false
+        });
+
+        var snowGeometry= new THREE.Geometry();
+        var range = 1500;
+        for (let i = 0; i < 1500; i++ ) {
+            let vertice = new THREE.Vector3(
+                Math.random() * range - range / 2,
+                Math.random() * range * 1.5,
+                Math.random() * range - range / 2);
+            /* 纵向移动速度 */
+            vertice.velocityY = 0.1 + Math.random() / 5;
+            /* 横向移动速度 */
+            vertice.velocityX = (Math.random() - 0.5) / 3;
+            /* 将顶点加入几何 */
+            snowGeometry.vertices.push(vertice);
+
+        }
+        snowGeometry.center();
+        snowPoints = new THREE.Points(snowGeometry, pointsMaterial);
+        scene.add(snowPoints);
+    }
+
+    function createRain() {
+        //实现下雨效果
+        var rainexture = new THREE.TextureLoader().load('rain.png');//雨滴图片
+        var rainPointsMaterial = new THREE.PointsMaterial({
+
+            size:7,
+            transparent:true,
+            opacity:0.7,
+            color:0x1E90FF,
+            map:rainexture,
+            blending:THREE.AdditiveBlending,
+            sizeAttenuation:true,
+            depthTest: false
+        });
+
+        var rainGeometry= new THREE.Geometry();
+        var range = 1500;
+        for (let i = 0; i < 1500; i++ ) {
+            let vertice = new THREE.Vector3(
+                Math.random() * range - range / 2,
+                Math.random() * range * 1.5,
+                Math.random() * range - range / 2);
+            /* 纵向移动速度 */
+            vertice.velocityY = 3.6 + Math.random() / 5;
+            /* 横向移动速度 */
+            vertice.velocityX = 0;//(Math.random() - 0.5) / 3;
+            /* 将顶点加入几何 */
+            rainGeometry.vertices.push(vertice);
+
+        }
+        rainGeometry.center();
+        rainPoints = new THREE.Points(rainGeometry, rainPointsMaterial);
+        scene.add(rainPoints);
+    }
+
+    /* 雨滴数据更新 */
+    function rainUpdate() {
+        var vertices = rainPoints.geometry.vertices;
+        vertices.forEach(function (v) {
+            v.y = v.y - (v.velocityY);
+            v.x = v.x - (v.velocityX);
+            if (v.y <= 0) v.y = 60;
+            if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
+
+        });
+        /* 顶点变动之后需要更新，否则无法实现雨滴特效 */
+        rainPoints.geometry.verticesNeedUpdate = true;
+
+    }
+
+    /* 雪花数据更新 */
+    function snowUpdate() {
+        var vertices = snowPoints.geometry.vertices;
+        vertices.forEach(function (v) {
+            v.y = v.y - (v.velocityY);
+            v.x = v.x - (v.velocityX);
+            if (v.y <= 0) v.y = 60;
+            if (v.x <= -20 || v.x >= 20) v.velocityX = v.velocityX * -1;
+
+        });
+        /* 顶点变动之后需要更新，否则无法实现雨滴特效 */
+        snowPoints.geometry.verticesNeedUpdate = true;
+
+    }
+
+    //setInterval("createRain()", 30000);
+
+
+    function render() {
+
+        //camera.position.x += ( mouseX - camera.position.x ) * .05;
+        //camera.position.y += ( - mouseY - camera.position.y ) * .05;
+
+        //文字始终面向摄像机，使得文字始终面向屏幕
+        /**text.rotation.copy(camera.rotation);
+        text2.rotation.copy(camera.rotation);
+        text3.rotation.copy(camera.rotation);
+        //text4.rotation.copy(camera.rotation);
+        text5.rotation.copy(camera.rotation);
+        text6.rotation.copy(camera.rotation);
+        cube3_1.rotation.copy(camera.rotation * 0.5);**/
+
+
+        //scene.position.x = ( mouseX - camera.position.x ) * .05;
+        //scene.position.y = ( mouseY + camera.position.y ) * .05;
+        //scene.position.z = ( mouseY + camera.position.y ) * .05;
+        //camera.lookAt( scene.position );
+
+        //renderer.render( scene, camera );
+
+    }
+
+</script>
+
+</body>
+</html>

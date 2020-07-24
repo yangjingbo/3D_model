@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cube</title>
+</head>
+
+<body>
+	<div id="content"></div>
+</body>
+
+
+
+
+<script src="three.js"></script>
+
+<script>
+
+	var scene = new THREE.Scene();
+	var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 1, 1000);
+	var renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	/*
+	添加立方体
+	 */
+    var box = new THREE.Mesh(
+    		new THREE.BoxGeometry(2, 2, 2),
+			new THREE.MeshBasicMaterial({
+				color: 0xffff00
+			})
+	)
+	box.position.set(0, 0, 0);//立方体放到原点位置
+    scene.add(box);
+
+	camera.position.set(5, 5, 5);
+    camera.lookAt(box.position);
+
+    document.getElementById("content").appendChild(renderer.domElement);
+    renderer.render(scene, camera);
+
+</script>
+
+
+</html>
